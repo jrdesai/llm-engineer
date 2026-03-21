@@ -6,14 +6,26 @@ Production-ready API with:
 - Metrics
 - Evaluation
 - Error handling
+- Structured JSON logging
 """
-from fastapi import FastAPI, HTTPException
+import logging
+import time
+
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
+
+# setup_logging() MUST be called before importing router.py
+# WHY: router.py calls logging.basicConfig() at import time.
+# Our setup_logging() uses force=True to override it, but only if it runs first.
+from logging_config import setup_logging
+setup_logging()
 
 from models import TicketInput, RoutingResult, HealthCheck
 from router import IntelligentRouter
 from config import API_TITLE, API_VERSION, API_DESCRIPTION, EVALUATION_CASES
+
+logger = logging.getLogger(__name__)
 
 # Create app
 app = FastAPI(
@@ -30,6 +42,28 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# --- Request logging middleware ---
+# WHY middleware instead of logging inside each endpoint?
+# Middleware runs for EVERY request automatically — you can't forget to add it.
+# It also captures the full round-trip time including FastAPI's own overhead.
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start = time.perf_counter()
+    response = await call_next(request)
+    latency_ms = (time.perf_counter() - start) * 1000
+
+    logger.info(
+        "http_request",
+        extra={
+            "method": request.method,
+            "path": request.url.path,
+            "status_code": response.status_code,
+            "latency_ms": round(latency_ms, 2),
+        },
+    )
+    return response
+
 
 # Initialize router
 router = IntelligentRouter()

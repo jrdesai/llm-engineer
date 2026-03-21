@@ -42,15 +42,9 @@ from config import (
 # Environment & client setup
 # ---------------------------------------------------------------------------
 
-# Set level to DEBUG via env to see LLM request/response details (e.g. ROUTER_DEBUG=1 or LOG_LEVEL=DEBUG)
-_log_level = os.getenv("LOG_LEVEL", "").upper() or (logging.DEBUG if os.getenv("ROUTER_DEBUG") else None)
-logging.basicConfig(
-    level=_log_level or logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
+# Logging is configured centrally in logging_config.py and called from main.py at startup.
+# We just get a named logger here — format, level, and handlers are set elsewhere.
 logger = logging.getLogger(__name__)
-if _log_level:
-    logger.setLevel(_log_level)
 
 
 def _log_empty_response(response) -> None:
