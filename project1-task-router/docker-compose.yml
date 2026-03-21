@@ -1,0 +1,14 @@
+services:
+  task-router:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../.env       # .env lives in repo root, one level up from this file
+    volumes:
+      - ./logs:/app/logs   # Persist logs outside the container
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
