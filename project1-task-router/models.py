@@ -1,13 +1,11 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Literal, Optional
 from datetime import datetime
 
-class TicketInput(BaseModel):
-    text: str = Field(..., description= "Ticket Content")
-    metadata: Optional[dict] = Field(default_factory=dict, description= "Additional metadata")
 
-    class Config:
-        json_schema_extra = {
+class TicketInput(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "text": "I'm having trouble with the app",
                 "metadata": {
@@ -16,19 +14,15 @@ class TicketInput(BaseModel):
                 }
             }
         }
+    )
+
+    text: str = Field(..., description="Ticket Content")
+    metadata: Optional[dict] = Field(default_factory=dict, description="Additional metadata")
 
 
 class RoutingResult(BaseModel):
-    category: Literal["URGENT", "NORMAL", "LOW"]
-    confidence: float = Field(ge=0.0, le=1.0)
-    reason: str = Field(..., min_length=10)
-    method_used: Literal["LLM", "CLASSICAL"]
-    tokens_used: int = Field(default=0, ge=0, description= "Number of tokens used")
-    latency_ms: float = Field(..., ge=0, description= "Latency in milliseconds")
-    timestamp: datetime = Field(default_factory=datetime.now, description= "Timestamp of the routing decision")
-    
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "category": "URGENT",
                 "confidence": 0.95,
@@ -39,6 +33,15 @@ class RoutingResult(BaseModel):
                 "timestamp": "2021-01-01T00:00:00Z"
             }
         }
+    )
+
+    category: Literal["URGENT", "NORMAL", "LOW"]
+    confidence: float = Field(ge=0.0, le=1.0)
+    reason: str = Field(..., min_length=10)
+    method_used: Literal["LLM", "CLASSICAL"]
+    tokens_used: int = Field(default=0, ge=0, description="Number of tokens used")
+    latency_ms: float = Field(..., ge=0, description="Latency in milliseconds")
+    timestamp: datetime = Field(default_factory=datetime.now, description="Timestamp of the routing decision")
 
 
 class HealthCheck(BaseModel):
